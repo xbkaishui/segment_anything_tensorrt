@@ -15,22 +15,21 @@ import cv2
 import matplotlib.pyplot as plt
 import onnxruntime
 from utils import pre_processing, apply_coords, show_mask, show_points
-
+from loguru import logger
+import time
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser("use sam onnx model inference")
     parser.add_argument("--img_path", type=str, default="images/truck.jpg", help="you want segment image")
-    parser.add_argument("--img_onnx_model_path", type=str, default="embedding_onnx/sam_default_embedding.onnx")
-    parser.add_argument("--sam_onnx_model_path", type=str, default="weights/sam_vit_h_4b8939.onnx", help="sam onnx model")
+    parser.add_argument("--img_onnx_model_path", type=str, default="embedding_onnx/sam_vit_l_embedding.onnx")
+    parser.add_argument("--sam_onnx_model_path", type=str, default="weights/sam_vit_l_prompt_mask.onnx", help="sam onnx model")
     parser.add_argument("--gpu_id", type=int, default=0, help="use which gpu to inference")
     args = parser.parse_args()
     
     device = f"cuda:{args.gpu_id}"
     
-    ort_embedding_session = onnxruntime.InferenceSession(args.img_onnx_model_path, provider=['CUDAExecutionProvider'])
-    ort_sam_session = onnxruntime.InferenceSession(args.sam_onnx_model_path, provider=['CUDAExecutionProvider'])
-    ort_embedding_session.set_providers(['CUDAExecutionProvider'],  provider_options=[{f'device_id': {args.gpu_id}}])
-    ort_sam_session.set_providers(['CUDAExecutionProvider'],  provider_options=[{f'device_id': {args.gpu_id}}])
+    ort_embedding_session = onnxruntime.InferenceSession(args.img_onnx_model_path, providers=['CUDAExecutionProvider'])
+    ort_sam_session = onnxruntime.InferenceSession(args.sam_onnx_model_path, providers=['CUDAExecutionProvider'])
     
     image = cv2.imread(args.img_path)
     image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
@@ -39,7 +38,14 @@ if __name__ == "__main__":
     ort_inputs = {"images": img_inputs}
     # Get image embedding, just extra once
     image_embeddings = ort_embedding_session.run(None, ort_inputs)[0]
+    logger.info('image_embeddings shape {}', image_embeddings.shape)
     
+    start = time.time()
+    count = 10
+    for i in range(count):
+        ort_embedding_session.run(None, ort_inputs)[0]
+    end = time.time()
+    logger.info("predict cost {} ms", (end - start)* 1000 / count)
     # Point prompt
     input_point = np.array([[500, 375]])
     input_label = np.array([1])
@@ -55,9 +61,9 @@ if __name__ == "__main__":
         "point_labels": onnx_label,
         "mask_input": onnx_mask_input,
         "has_mask_input": onnx_has_mask_input,
-        "orig_im_size": np.array(image.shape[:2], dtype=np.int32)
+        # "orig_im_size": np.array(image.shape[:2], dtype=np.int32)
     }
-    masks, scores, low_res_logits = ort_sam_session.run(None, ort_inputs)
+    masks, scores = ort_sam_session.run(None, ort_inputs)
     masks = masks > 0.0
     
     for i, (mask, score) in enumerate(zip(masks[0], scores[0])):

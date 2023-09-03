@@ -1,0 +1,1 @@
+python scripts/onnx2trt.py --prompt_masks_pt2onnx

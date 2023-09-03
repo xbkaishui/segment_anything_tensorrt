@@ -1,0 +1,1 @@
+python scripts/onnx2trt.py --img_pt2onnx --sam_checkpoint /root/.cache/ckpts/sam_model_vit_l.pth --model_type vit_l

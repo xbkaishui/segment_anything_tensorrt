@@ -1,12 +1,4 @@
-#!/usr/bin/env python
 # -*- encoding: utf-8 -*-
-'''
-@File      : common.py
-@Time      : 2023/04/20 16:30:58
-@Author    : Huang Bo
-@Contact   : cenahwang0304@gmail.com
-@Desc      : None
-'''
 
 '''
 TensorRT common file

@@ -112,7 +112,7 @@ def export_prompt_masks_model(model_type: str, checkpoint: str, opset: int):
 
     onnx_model = SamOnnxModel(
         model=sam,
-        return_single_mask=False,
+        return_single_mask=True,
         use_stability_score=False,
         return_extra_metrics=False,
     )
@@ -324,8 +324,8 @@ def export_engine_prompt_encoder_and_mask_decoder(f='sam_onnx_example.onnx', hal
 if __name__ == '__main__':
     parser = argparse.ArgumentParser("transform pth model to onnx, or transform onnx to tensorrt")
     parser.add_argument("--img_pt2onnx", action="store_true", help="transform image embedding pth from sam model to onnx")
-    parser.add_argument("--sam_checkpoint", type=str, default="weights/sam_vit_h_4b8939.pth")
-    parser.add_argument("--model_type", type=str, default="default")
+    parser.add_argument("--sam_checkpoint", type=str, default="/root/.cache/ckpts/sam_model_vit_l.pth")
+    parser.add_argument("--model_type", type=str, default="vit_l")
     parser.add_argument("--prompt_masks_pt2onnx", action="store_true", help="whether export prompt encoder and masks decoder module")
     parser.add_argument("--img_onnx2trt", action="store_true", help="only transform image embedding onnx model to tensorrt engine")
     parser.add_argument("--img_onnx_model_path", type=str, default="embedding_onnx/sam_default_embedding.onnx")
